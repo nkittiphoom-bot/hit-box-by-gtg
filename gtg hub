@@ -1,0 +1,221 @@
+-- [[ GTG Shop - Safe Hitbox (Custom Size, Transparency & Color) ]] --
+
+local getTargetParent = function()
+    if gethui then
+        return gethui()
+    elseif game:GetService("CoreGui") then
+        return game:GetService("CoreGui")
+    else
+        return game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+
+local ParentGui = getTargetParent()
+
+if ParentGui:FindFirstChild("GTG_SafeHitbox_UI") then
+    ParentGui.GTG_SafeHitbox_UI:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "GTG_SafeHitbox_UI"
+ScreenGui.Parent = ParentGui
+
+-- ปุ่มลอย เปิด-ปิด UI
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleBtn.BorderColor3 = Color3.fromRGB(0, 200, 255)
+ToggleBtn.Position = UDim2.new(0, 15, 0, 15)
+ToggleBtn.Size = UDim2.new(0, 110, 0, 35)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.Text = "GTG SHOP [UI]"
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
+ToggleBtn.TextSize = 14
+
+-- หน้าต่างหลัก
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -135)
+MainFrame.Size = UDim2.new(0, 320, 0, 270)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local TopBar = Instance.new("Frame")
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+TopBar.BorderSizePixel = 0
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+
+local Title = Instance.new("TextLabel")
+Title.Parent = TopBar
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Size = UDim2.new(0, 200, 1, 0)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "GTG Shop | Safe Hitbox (ปรับแต่งได้)"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = TopBar
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Position = UDim2.new(1, -30, 0, 0)
+CloseBtn.Size = UDim2.new(0, 30, 1, 0)
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.TextSize = 16
+
+local Container = Instance.new("Frame")
+Container.Parent = MainFrame
+Container.BackgroundTransparency = 1
+Container.Position = UDim2.new(0, 10, 0, 45)
+Container.Size = UDim2.new(1, -20, 1, -55)
+
+local Layout = Instance.new("UIListLayout")
+Layout.Parent = Container
+Layout.Padding = UDim.new(0, 8)
+
+-- ค่าตั้งต้น
+local HitboxEnabled = false
+local HitboxSize = 15
+local HitboxTransparency = 0.7
+local HitboxColorIndex = 1
+local ColorList = {
+    Color3.fromRGB(0, 255, 150), -- สีเขียว
+    Color3.fromRGB(0, 150, 255), -- สีฟ้า
+    Color3.fromRGB(255, 50, 50),  -- สีแดง
+    Color3.fromRGB(255, 200, 0)  -- สีเหลือง
+}
+local ColorNames = {"เขียว", "ฟ้า", "แดง", "เหลือง"}
+
+-- 1. ปุ่มเปิด-ปิด
+local HitboxToggleBtn = Instance.new("TextButton")
+HitboxToggleBtn.Parent = Container
+HitboxToggleBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+HitboxToggleBtn.BorderColor3 = Color3.fromRGB(60, 60, 60)
+HitboxToggleBtn.Size = UDim2.new(1, 0, 0, 32)
+HitboxToggleBtn.Font = Enum.Font.SourceSans
+HitboxToggleBtn.Text = "เปิดใช้งาน Safe Hitbox : [OFF]"
+HitboxToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+HitboxToggleBtn.TextSize = 14
+
+HitboxToggleBtn.MouseButton1Click:Connect(function()
+    HitboxEnabled = not HitboxEnabled
+    HitboxToggleBtn.BackgroundColor3 = HitboxEnabled and Color3.fromRGB(0, 150, 70) or Color3.fromRGB(35, 35, 35)
+    HitboxToggleBtn.Text = "เปิดใช้งาน Safe Hitbox : " .. (HitboxEnabled and "[ON]" or "[OFF]")
+    
+    if not HitboxEnabled then
+        for _, v in pairs(game.Workspace:GetChildren()) do
+            if v.Name == "GTG_SafeBox" then
+                v:Destroy()
+            end
+        end
+    end
+end)
+
+-- 2. ช่องใส่ขนาด Hitbox
+local SizeBox = Instance.new("TextBox")
+SizeBox.Parent = Container
+SizeBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+SizeBox.BorderColor3 = Color3.fromRGB(60, 60, 60)
+SizeBox.Size = UDim2.new(1, 0, 0, 32)
+SizeBox.Font = Enum.Font.SourceSans
+SizeBox.PlaceholderText = "พิมพ์ขนาด (เช่น 10, 15, 20) แล้ว Enter"
+SizeBox.Text = ""
+SizeBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SizeBox.TextSize = 14
+
+SizeBox.FocusLost:Connect(function(enter)
+    if enter then
+        local val = tonumber(SizeBox.Text)
+        if val then
+            HitboxSize = val
+            SizeBox.Text = "ขนาดปัจจุบัน: " .. tostring(HitboxSize)
+        end
+    end
+end)
+
+-- 3. ช่องปรับความโปร่งใส (Transparency)
+local TransBox = Instance.new("TextBox")
+TransBox.Parent = Container
+TransBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TransBox.BorderColor3 = Color3.fromRGB(60, 60, 60)
+TransBox.Size = UDim2.new(1, 0, 0, 32)
+TransBox.Font = Enum.Font.SourceSans
+TransBox.PlaceholderText = "พิมพ์ความโปร่งใส 0 ถึง 1 (เช่น 0.5, 0.9, 1)"
+TransBox.Text = ""
+TransBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TransBox.TextSize = 14
+
+TransBox.FocusLost:Connect(function(enter)
+    if enter then
+        local val = tonumber(TransBox.Text)
+        if val then
+            -- ล็อกให้อยู่ในระยะ 0 ถึง 1
+            HitboxTransparency = math.clamp(val, 0, 1)
+            TransBox.Text = "ความโปร่งใสปัจจุบัน: " .. tostring(HitboxTransparency)
+        end
+    end
+end)
+
+-- 4. ปุ่มสลับสีกล่อง
+local ColorBtn = Instance.new("TextButton")
+ColorBtn.Parent = Container
+ColorBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ColorBtn.BorderColor3 = Color3.fromRGB(60, 60, 60)
+ColorBtn.Size = UDim2.new(1, 0, 0, 32)
+ColorBtn.Font = Enum.Font.SourceSans
+ColorBtn.Text = "สลับสีกล่อง : [เขียว]"
+ColorBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ColorBtn.TextSize = 14
+
+ColorBtn.MouseButton1Click:Connect(function()
+    HitboxColorIndex = HitboxColorIndex + 1
+    if HitboxColorIndex > #ColorList then
+        HitboxColorIndex = 1
+    end
+    ColorBtn.Text = "สลับสีกล่อง : [" .. ColorNames[HitboxColorIndex] .. "]"
+end)
+
+-- Loop อัปเดตขนาด, ความโปร่งใส และสี
+task.spawn(function()
+    while task.wait(0.1) do
+        if HitboxEnabled then
+            for _, player in pairs(game.Players:GetPlayers()) do
+                if player ~= game.Players.LocalPlayer and player.Character then
+                    pcall(function()
+                        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            local safeBox = player.Character:FindFirstChild("GTG_SafeBox")
+                            if not safeBox then
+                                safeBox = Instance.new("Part")
+                                safeBox.Name = "GTG_SafeBox"
+                                safeBox.Parent = player.Character
+                                safeBox.Material = Enum.Material.Neon
+                                safeBox.CanCollide = false
+                                safeBox.Massless = true
+                                
+                                local weld = Instance.new("Weld")
+                                weld.Name = "GTG_Weld"
+                                weld.Parent = safeBox
+                                weld.Part0 = hrp
+                                weld.Part1 = safeBox
+                            end
+                            
+                            safeBox.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
+                            safeBox.Transparency = HitboxTransparency
+                            safeBox.Color = ColorList[HitboxColorIndex]
+                        end
+                    end)
+                end
+            end
+        end
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)  เอาระบบhitboxนี้มาใช้
